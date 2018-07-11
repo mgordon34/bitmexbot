@@ -1,1 +1,2 @@
+bitmex-ws
 google-api-python-client

@@ -1,3 +1,5 @@
 .venv/
+
+.bitmex_keys
 client_secret.json
 credentials.json
