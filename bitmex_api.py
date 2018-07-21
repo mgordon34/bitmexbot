@@ -17,14 +17,23 @@ class Bitmex():
         self.lastprice = 0
 
         self.ws.get_instrument()
+    
+    def get_balance(self):
+        return 50
 
     def get_price(self):
         return self.ws.get_ticker()
 
     def get_bid(self):
+        return self.get_orderbook('Buy')
+
+    def get_ask(self):
+        return self.get_orderbook('Sell')
+
+    def get_orderbook(self, direction):
         result = self.cl.OrderBook.OrderBook_getL2(symbol=self.symbol, depth=1).result()
         for r in result[0]:
-            if r['side'] == 'Buy':
+            if r['side'] == direction:
                 return r['price']
         return result
 
@@ -45,7 +54,20 @@ class Bitmex():
     def get_recent(self):
         return self.ws.recent_trades()
 
-    def buy_limit(self):
-        result = self.cl.Order.Order_new(symbol=self.symbol, ordType='LimitIfTouched', orderQty=1, stopPx=6240.5, price=6240.5, execInst='Close').result()
+    def limit(self, qty, p):
+        result = self.cl.Order.Order_new(symbol=self.symbol, ordType='Limit', orderQty=qty, price=p).result()
         return result
 
+    def take_profit(self, qty, trigger, p):
+        result = self.cl.Order.Order_new(symbol=self.symbol, ordType='LimitIfTouched', orderQty=qty, stopPx=trigger, price=p, execInst='Close').result()
+        return result
+
+    def stop(self, qty, p):
+        result = self.cl.Order.Order_new(symbol=self.symbol, ordType='Stop', orderQty=qty, stopPx=p, execInst='Close').result()
+        return result
+
+    def set_stops(self, link_id, qty, stop, tp):
+        res1 = self.cl.Order.Order_new(symbol=self.symbol, clOrdLinkID=link_id, contingencyType='OneCancelsTheOther', ordType='Limit', orderQty=qty, price=tp, execInst='Close').result()
+        res2 = self.cl.Order.Order_new(symbol=self.symbol, clOrdLinkID=link_id, contingencyType='OneCancelsTheOther', ordType='Stop', orderQty=qty, stopPx=stop, execInst='Close').result()
+        print(res1)
+        print(res2)
